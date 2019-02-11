@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class player : MonoBehaviour {
@@ -135,8 +136,7 @@ public class player : MonoBehaviour {
                 isDashing = true;
                 rb.gravityScale = 0.0f;
                 rb.velocity = velocity.normalized * dashSpeed;
-                Time.timeScale = sloMo;
-                Time.fixedDeltaTime = Time.timeScale * 0.02f;
+                
             }
         }
         if(!isSliding && isGrounded && rb.velocity.y < 0.0f) { dashClock = 0.0f; }
@@ -144,9 +144,20 @@ public class player : MonoBehaviour {
         {
             dashClock = 0.0f;
         }
+        if (Input.GetKeyUp(KeyCode.R))
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
+        if (Input.GetKeyUp(KeyCode.Escape))
+        {
+            //SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            Application.Quit();
+        }
         if (dashClock > 0.0f)
         {
             dashClock -= Time.deltaTime;
+            Time.timeScale = sloMo;
+            Time.fixedDeltaTime = Time.timeScale * 0.02f;
             return;
         }
         else if (isDashing)
