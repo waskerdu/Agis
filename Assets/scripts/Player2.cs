@@ -9,9 +9,11 @@ public class Player2 : MonoBehaviour
     public float speed = 10.0f;
     public float jumpPower = 10.0f;
     public Vector2 dashPower = new Vector2(30f,10f);
-    public float dashSpeed = 10.0f;
+    public Vector2 externalVelocity = new Vector2();
     public float dashTime = 0.3f;
     public float dashClock = 0.0f; //greater than zero during player dash, overrides all movement
+    public float velocityDecayRate = 10f;
+    public float velocityCutoff = 1f;
     public int maxJumps = 1;
     public int currentJumps = 0;
     bool grounded = false; //set to false every frame, reset to true by oncollsision stay
@@ -46,14 +48,16 @@ public class Player2 : MonoBehaviour
     void Update()
     {
         // begin
-        rb.gravityScale = 4.0f;
-        Vector2 vel = rb.velocity;
+        rb.gravityScale = 10.0f;
+        Vector2 vel;
+        Vector2 moveVel = new Vector2(0,-1f); //used to keep track of where the player is trying to go
+        DecayExternalVelocity();
 
         //dashing
-        if (Dash(vel)) return;
+        if (Dash()) return;
 
         // movement
-        vel.x = Input.GetAxisRaw(horizontal) * speed;
+        moveVel.x = Input.GetAxisRaw(horizontal) * speed;
 
         // jumping
         if(grounded)
@@ -64,7 +68,7 @@ public class Player2 : MonoBehaviour
         {
             if(Input.GetButtonDown(jump))
             {
-                vel.y = jumpPower;
+                moveVel.y = jumpPower;
                 currentJumps--;
             }
         }
@@ -76,24 +80,25 @@ public class Player2 : MonoBehaviour
         }
 
         // sprite stuff
-        if(vel.x < 0.0f){spriteFacingLeft = true;}
-        if(vel.x > 0.0f){spriteFacingLeft = false;}
+        if(moveVel.x < 0.0f){spriteFacingLeft = true;}
+        if(moveVel.x > 0.0f){spriteFacingLeft = false;}
         rend.flipX = spriteFacingLeft;
 
         // wrap up
-        rb.velocity = vel;
+        vel = moveVel + externalVelocity;
+        rb.velocity = moveVel;
         grounded = false;
     }
 
     //returns true if dashing, false if not dashing
-    private bool Dash(Vector2 vel)
+    private bool Dash()
     {
+        Vector2 dashVel = new Vector2();
         // if we are in the middle of a dash
         if (dashClock > 0.0f)
         {
             rb.gravityScale = 0.0f;
             dashClock -= Time.deltaTime;
-            rb.velocity = vel;
             lig.enabled = true;
             return true;
         }
@@ -111,43 +116,51 @@ public class Player2 : MonoBehaviour
             rb.gravityScale = 0.0f;
 
 
-            vel.x = Input.GetAxisRaw(horizontal);
+            dashVel.x = Input.GetAxisRaw(horizontal);
             //no x defaults sprite direction
-            if (vel.x == 0.0f)
+            if (dashVel.x == 0.0f)
             {
-                if (spriteFacingLeft) { vel.x = -1.0f; }
-                else { vel.x = 1.0f; }
+                if (spriteFacingLeft) { dashVel.x = -1.0f; }
+                else { dashVel.x = 1.0f; }
             }
             else 
             {
-                vel.x = vel.x / Mathf.Abs(vel.x);//sets vel.x to either 1 or -1 based on input
+                dashVel.x = dashVel.x / Mathf.Abs(dashVel.x);//sets dashVel.x to either 1 or -1 based on input
             }
 
 
-            vel.y = Input.GetAxisRaw(vertical);
+            dashVel.y = Input.GetAxisRaw(vertical);
             //no y defaults to up
-            if (vel.y == 0.0f)
+            if (dashVel.y == 0.0f)
             {
-                vel.y = 1.0f;
+                dashVel.y = 1.0f;
             }
             else 
             {
-                vel.y = vel.y / Mathf.Abs(vel.y);// 1 or -1 y
+                dashVel.y = dashVel.y / Mathf.Abs(dashVel.y);// 1 or -1 y
             }
-            vel = vel.normalized;
-            vel.x *= dashPower.x;
-            vel.y *= dashPower.y;
+            dashVel = dashVel.normalized;
+            dashVel.x *= dashPower.x;
+            dashVel.y *= dashPower.y;
             
             //transform.position += Vector3.up * 0.1f; //why? this breaks the physics engine
             
-            rb.velocity = vel;
-            float frameAngle = -Vector2.SignedAngle(Vector2.right, vel);
+            rb.velocity = dashVel;
+            float frameAngle = -Vector2.SignedAngle(Vector2.right, dashVel);
             Debug.Log(frameAngle);
             frame.transform.eulerAngles = Vector3.forward * (frameAngle); //what is this doing??
             return true;
         }
 
         return false;
+    }
+
+    private void DecayExternalVelocity(){
+        externalVelocity *= Time.deltaTime * velocityDecayRate;
+        if(externalVelocity.magnitude < velocityCutoff){
+            Debug.Log("cutting external velocity");
+            externalVelocity = Vector2.zero;
+        }
     }
 
     void OnCollisionStay2D(Collision2D collisionInfo)
