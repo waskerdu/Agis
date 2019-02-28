@@ -34,9 +34,9 @@ namespace GameInput
             switch(type)
             {
                 case ControllerType.xbox:
-                    return Input.GetKeyDown("joystic "+index.ToString()+ " button 0");
+                    return Input.GetKeyDown("joystick "+index.ToString()+ " button 0");
                 case ControllerType.dualshock:
-                    return Input.GetKeyDown("joystic "+index.ToString()+ " button 1");
+                    return Input.GetKeyDown("joystick "+index.ToString()+ " button 1");
                 case ControllerType.keyboard:
                     return Input.GetButtonDown("Jump");
             }
@@ -47,9 +47,9 @@ namespace GameInput
             switch(type)
             {
                 case ControllerType.xbox:
-                    return Input.GetKey("joystic "+index.ToString()+ " button 0");
+                    return Input.GetKey("joystick "+index.ToString()+ " button 0");
                 case ControllerType.dualshock:
-                    return Input.GetKey("joystic "+index.ToString()+ " button 1");
+                    return Input.GetKey("joystick "+index.ToString()+ " button 1");
                 case ControllerType.keyboard:
                     return Input.GetButton("Jump");
             }
@@ -60,9 +60,9 @@ namespace GameInput
             switch(type)
             {
                 case ControllerType.xbox:
-                    return Input.GetKeyDown("joystic "+index.ToString()+ " button 4");
+                    return Input.GetKeyDown("joystick "+index.ToString()+ " button 4");
                 case ControllerType.dualshock:
-                    return Input.GetKeyDown("joystic "+index.ToString()+ " button 4");
+                    return Input.GetKeyDown("joystick "+index.ToString()+ " button 4");
                 case ControllerType.keyboard:
                     return Input.GetButtonDown("Dash");
             }
@@ -73,9 +73,9 @@ namespace GameInput
             switch(type)
             {
                 case ControllerType.xbox:
-                    return Input.GetKey("joystic "+index.ToString()+ " button 4");
+                    return Input.GetKey("joystick "+index.ToString()+ " button 4");
                 case ControllerType.dualshock:
-                    return Input.GetKey("joystic "+index.ToString()+ " button 4");
+                    return Input.GetKey("joystick "+index.ToString()+ " button 4");
                 case ControllerType.keyboard:
                     return Input.GetButton("Dash");
             }

@@ -57,6 +57,7 @@
      <Compile Include="Assets\scripts\player.cs" />
      <Compile Include="Assets\scripts\Player1.cs" />
      <Compile Include="Assets\scripts\SceneManager.cs" />
+     <Compile Include="Assets\scripts\TimeDoor.cs" />
      <Compile Include="Assets\Tiled2Unity\Scripts\Runtime\CircleObject.cs" />
      <Compile Include="Assets\Tiled2Unity\Scripts\Runtime\GameObjectExtensions.cs" />
      <Compile Include="Assets\Tiled2Unity\Scripts\Runtime\GPUInstancing.cs" />
