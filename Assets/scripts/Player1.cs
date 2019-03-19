@@ -5,6 +5,7 @@ using UnityEngine;
 public class Player1 : MonoBehaviour
 {
     public int playerNum = 0;
+    public string hitMessage;
     public float speed = 10.0f;
     public float jumpPower = 10.0f;
     public float dashSpeed = 10.0f;
@@ -20,7 +21,7 @@ public class Player1 : MonoBehaviour
     public bool canDash = false;
     Light lig;
     GameObject frame;
-    string fire = "Fire";
+    string dash = "Fire";
     string horizontal = "Horizontal";
     string vertical = "Vertical";
     string jump = "Jump";
@@ -32,13 +33,34 @@ public class Player1 : MonoBehaviour
         rend = frame.GetComponent<SpriteRenderer>();
         lig = frame.GetComponent<Light>();
         lig.color = playerColors[playerNum];
+        SetInputs();
+    }
 
-        if (playerNum > 0)
+    public void SetPlayerNum(int playerNum){this.playerNum=playerNum;}
+
+    public void SetInputs(bool xbox = true)
+    {
+        string playerNumStr = playerNum.ToString();
+        if(playerNum == 0)
         {
-            fire += playerNum.ToString();
-            horizontal += playerNum.ToString();
-            vertical += playerNum.ToString();
-            jump += playerNum.ToString();
+            dash = "Fire";
+            jump = "Jump";
+            horizontal = "Horizontal";
+            vertical = "Vertical";
+        }
+        else if (xbox)
+        {
+            dash = "joystick " + playerNumStr + " button 4";
+            horizontal = "Horizontal" + playerNumStr;
+            vertical = "Vertical" + playerNumStr;
+            jump = "joystick " + playerNumStr + " button 0";
+        }
+        else
+        {
+            dash = "joystick " + playerNumStr + " button 6"; 
+            horizontal = "Horizontal" + playerNumStr;
+            vertical = "Vertical" + playerNumStr;
+            jump = "joystick " + playerNumStr + " button 1";
         }
     }
 
@@ -47,6 +69,23 @@ public class Player1 : MonoBehaviour
         // begin
         rb.gravityScale = 4.0f;
         Vector2 vel = rb.velocity;
+
+        bool jumpDown, jumpPressed, dashDown, dashPressed;
+        if(playerNum == 0)
+        {
+            //
+            jumpPressed = Input.GetButtonDown("Jump");
+            jumpDown = Input.GetButton("Jump");
+            dashPressed = Input.GetButtonDown("Fire");
+            dashDown = Input.GetButton("Fire");
+        }
+        else
+        {
+            jumpPressed = Input.GetKeyDown(jump);
+            jumpDown = Input.GetKey(jump);
+            dashPressed = Input.GetKeyDown(dash);
+            dashDown = Input.GetKey(dash);
+        }
 
         // dashing
         if (dashClock > 0.0f)
@@ -62,7 +101,7 @@ public class Player1 : MonoBehaviour
             lig.enabled = false;
             frame.transform.eulerAngles = Vector2.zero;
         }
-        if(Input.GetButtonDown(fire) && canDash)
+        if(dashPressed && canDash)
         {
             rb.gravityScale = 0.0f;
             vel.x = Input.GetAxisRaw(horizontal);
@@ -106,7 +145,7 @@ public class Player1 : MonoBehaviour
         }
         if(currentJumps > 0)
         {
-            if(Input.GetButtonDown(jump))
+            if(jumpPressed)
             {
                 vel.y = jumpPower;
                 currentJumps--;
@@ -114,7 +153,7 @@ public class Player1 : MonoBehaviour
         }
 
         // air control
-        if(Input.GetButton(jump))
+        if(jumpDown)
         {
             rb.gravityScale = 1.0f;
         }
@@ -127,6 +166,21 @@ public class Player1 : MonoBehaviour
         // wrap up
         rb.velocity = vel;
         grounded = false;
+    }
+
+    void SetHitMessage(string message)
+    {
+        this.hitMessage = message;
+    }
+
+    void OnTriggerEnter2D(Collider2D collider)
+    {
+        //
+        if(collider.tag == "DamageBox")
+        {
+            // send message
+            SendMessageUpwards(hitMessage);
+        }
     }
 
     void OnCollisionStay2D(Collision2D collisionInfo)

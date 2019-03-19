@@ -2,28 +2,20 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using LevelDataSpace;
+using System.IO;
 
 namespace GameScene
 {
-    public class RoomData
-    {
-        public enum RoomType
-        {
-            passible,
-            impassible,
-        }
-
-        public RoomType type = RoomType.passible;
-        public Vector2 smokeDirection = Vector2.right;
-        public GameObject prefab;
-
-    }
+    
     public class SceneManager : MonoBehaviour
     {
         // the scene manager runs the game itself. it is in charge of spawning and despawning chambers
         public GameObject[] roomPrefabs;
+        public GameObject player;
+        public int numPlayers = 2;
         public Sprite[] icons;
-        GameObject miniMap;
+        public GameObject miniMap;
         GameObject currentRoom;
         public GameObject minimapIcon;
         public List<RoomData> Grid;
@@ -35,19 +27,53 @@ namespace GameScene
         public bool CanMoveDown = true;
         public bool CanMoveLeft = true;
         public bool CanMoveRight = true;
+        List<GameObject> doors;
+        List<GameObject> players;
+        string dataPath;
         void Start()
         {
-            miniMap = transform.GetChild(0).gameObject;
+            dataPath = Path.Combine(Application.persistentDataPath, "LevelData.txt");
+            //Debug.Log(dataPath);
+            doors = new List<GameObject>();
+            players = new List<GameObject>();
+            for(int i = 0; i<4;i++)
+            {
+                GameObject currentPlayer = Instantiate(player);
+                currentPlayer.SetActive(false);
+                players.Add(currentPlayer);
+            }
             LaunchMatch();
         }
 
         void Update()
         {
             //
-            if(Input.GetButtonDown("MenuUp")){MoveUp();}
+            /* *if(Input.GetButtonDown("MenuUp")){MoveUp();}
             if(Input.GetButtonDown("MenuDown")){MoveDown();}
             if(Input.GetButtonDown("MenuLeft")){MoveLeft();}
-            if(Input.GetButtonDown("MenuRight")){MoveRight();}
+            if(Input.GetButtonDown("MenuRight")){MoveRight();}/* */
+        }
+
+        void SaveLevel()
+        {
+            LevelData levelData = new LevelData();
+            levelData.cells = Grid;
+            string jsonString = JsonUtility.ToJson (levelData);
+
+            using (StreamWriter streamWriter = File.CreateText (dataPath))
+            {
+                streamWriter.Write (jsonString);
+            }
+        }
+
+        void LoadLevel()
+        {
+            using (StreamReader streamReader = File.OpenText (dataPath))
+            {
+                string jsonString = streamReader.ReadToEnd ();
+                LevelData data = JsonUtility.FromJson<LevelData> (jsonString);
+                Grid = data.cells;
+            }
         }
 
         bool IsCellOpen(int x, int y)
@@ -74,14 +100,22 @@ namespace GameScene
             if(CellY == -1){CellY = 0;}
             if(CellY == GridHeight){CellY = GridHeight-1;}
             int cellIndex = CellX + CellY * GridWidth;
-            for(int i = 0; i < miniMap.transform.childCount; i++)
+            for(int i = 0; i < Grid.Count; i++)
             {
-                Sprite spr;
-                if(Grid[i].type == RoomData.RoomType.impassible){spr = icons[8];}
-                else{ spr = icons[0]; }
-                miniMap.transform.GetChild(i).GetComponent<Image>().sprite=spr;
+                //Sprite spr = icons[0];
+                //if(Grid[i].type == RoomData.RoomType.impassible){spr = icons[7];}
+                //else if(Grid[i].type == RoomData.RoomType.leftWin){spr.getc}
+                //miniMap.transform.GetChild(i).GetComponent<Image>().sprite=spr;
+                Color currentColor = Color.white;
+                if(Grid[i].type == RoomData.RoomType.impassible){currentColor = Color.black;}
+                else if(Grid[i].type == RoomData.RoomType.leftWin){currentColor = LevelDataSpace.Colors.colors[0];}
+                else if(Grid[i].type == RoomData.RoomType.rightWin){currentColor = LevelDataSpace.Colors.colors[1];}
+                else if(Grid[i].type == RoomData.RoomType.upWin){currentColor = LevelDataSpace.Colors.colors[2];}
+                else if(Grid[i].type == RoomData.RoomType.downWin){currentColor = LevelDataSpace.Colors.colors[3];}
+                miniMap.transform.GetChild(i).GetComponent<Image>().color = currentColor;
             }
-            miniMap.transform.GetChild(cellIndex).GetComponent<Image>().sprite=icons[7];
+            //miniMap.transform.GetChild(cellIndex).GetComponent<Image>().sprite=icons[8];
+            miniMap.transform.GetChild(cellIndex).GetComponent<Image>().color = Color.yellow;
             CanMoveUp = IsCellOpen(CellX,CellY-1);
             CanMoveDown = IsCellOpen(CellX,CellY+1);
             CanMoveLeft = IsCellOpen(CellX-1,CellY);
@@ -91,6 +125,21 @@ namespace GameScene
                 Destroy(currentRoom);
             }
             currentRoom=Instantiate(GetCell(CellX,CellY).prefab);
+            currentRoom.transform.SetParent(transform);
+            doors.Clear();
+            foreach (Transform child in currentRoom.GetComponentsInChildren<Transform>())
+            {
+                if(child.gameObject.tag == "Respawn"){doors.Add(child.gameObject);}
+            }
+
+            for(int i = 0; i<numPlayers; i++)
+            {
+                GameObject currentPlayer = players[i];
+                currentPlayer.SetActive(true);
+                currentPlayer.transform.SetParent(gameObject.transform);
+                currentPlayer.transform.position = doors[i].transform.position - Vector3.forward;
+                doors[i].SetActive(false);
+            }
         }
 
         void MoveUp(){ChangeCell(0,-1);}
@@ -100,6 +149,19 @@ namespace GameScene
 
         void LaunchMatch()
         {
+            // assign default controllers
+            string[] hitMessages = {"MoveLeft","MoveRight","MoveUp","MoveDown"};
+            if (numPlayers != 0)
+            {
+                for( int i = 0; i < numPlayers; i++)
+                {
+                    players[i].SetActive(true);
+                    players[i].SendMessage("SetPlayerNum",i);
+                    players[i].SendMessage("SetInputs",true);
+                    players[i].SendMessage("SetHitMessage",hitMessages[i]);
+                    players[i].SetActive(false);
+                }
+            }
             // make sure minimap is right dimensions
             while(miniMap.transform.childCount < GridWidth*GridHeight)
             {
@@ -112,21 +174,31 @@ namespace GameScene
                 Destroy(miniMap.transform.GetChild(i));
             }
             
-
             // load grid
-            Grid = new List<RoomData>(GridWidth*GridHeight);
+            LoadLevel();
+            miniMap.GetComponent<GridLayoutGroup>().constraintCount = GridWidth;
+            /* *Grid = new List<RoomData>(GridWidth*GridHeight);
             for(int i = 0; i < GridWidth * GridHeight; i++)
-            { 
-                //Grid.Add(new RoomData());
+            {
                 RoomData tempRoom = new RoomData();
-                int prefabIndex = Random.Range(0,roomPrefabs.Length);
-                tempRoom.prefab=roomPrefabs[prefabIndex];
+                tempRoom.prefabIndex = Random.Range(0,roomPrefabs.Length);
+                tempRoom.prefab=roomPrefabs[tempRoom.prefabIndex];
                 Grid.Add(tempRoom);
             }
-            Grid[0].type=RoomData.RoomType.impassible;
-            Grid[3].type=RoomData.RoomType.impassible;
-
+            Grid[0 + GridWidth * 2].type=RoomData.RoomType.leftWin;
+            Grid[0 + GridWidth * 1].type=RoomData.RoomType.impassible;
+            Grid[0 + GridWidth * 3].type=RoomData.RoomType.impassible;
+            Grid[-1 + GridWidth * 3].type=RoomData.RoomType.rightWin;
+            Grid[-1 + GridWidth * 2].type=RoomData.RoomType.impassible;
+            Grid[-1 + GridWidth * 4].type=RoomData.RoomType.impassible;
+            Grid[3].type=RoomData.RoomType.upWin;
+            Grid[2].type=RoomData.RoomType.impassible;
+            Grid[4].type=RoomData.RoomType.impassible;
+            Grid[3 + GridWidth * 4].type=RoomData.RoomType.downWin;
+            Grid[2 + GridWidth * 4].type=RoomData.RoomType.impassible;
+            Grid[4 + GridWidth * 4].type=RoomData.RoomType.impassible;/* */
             ChangeCell(0,0);
+            //SaveLevel();
         }
     }
 }
