@@ -5,6 +5,8 @@ using UnityEngine;
 public class Player1 : MonoBehaviour
 {
     public int playerNum = 0;
+    public float invulnTime = 0.1f;
+    public float invlunClock = 0.0f;
     public string hitMessage;
     public float speed = 10.0f;
     public float jumpPower = 10.0f;
@@ -69,6 +71,8 @@ public class Player1 : MonoBehaviour
         // begin
         rb.gravityScale = 4.0f;
         Vector2 vel = rb.velocity;
+
+        if(invlunClock > 0){invlunClock -= Time.deltaTime;}
 
         bool jumpDown, jumpPressed, dashDown, dashPressed;
         if(playerNum == 0)
@@ -176,9 +180,10 @@ public class Player1 : MonoBehaviour
     void OnTriggerEnter2D(Collider2D collider)
     {
         //
-        if(collider.tag == "DamageBox")
+        if(collider.tag == "DamageBox" && invlunClock > 0 == false)
         {
             // send message
+            invlunClock = invulnTime;
             SendMessageUpwards(hitMessage);
         }
     }

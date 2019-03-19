@@ -33,8 +33,7 @@ namespace LevelDataSpace
         }
 
         public RoomType type = RoomType.passible;
-        public Vector2 smokeDirection = Vector2.right;
-        public GameObject prefab;
+        public Vector3 smokeDirection = Vector3.zero;
         public int prefabIndex;
     }
 }
