@@ -1,0 +1,18 @@
+-Ideal Outcome
+    We want player movement to feel snappy, responsive
+    Need to be able to effect player movement with bounce pads, etc
+
+
+
+-Ideas
+    Player has public velocity vector2, is set every frame by movement method
+    Turn off movement method during status effect caused by bounce pad, set vel 
+        Status effect wears off
+        Bounce pad would need to be quick and wear off once player reaches top of arc or stops moving up, taking control from them could piss them off / kill gameplay flow 
+
+    Returning early can save us a lot of operations per frame
+
+    Try to only set vel once per frame
+
+    Use unity’s physics more fully? 
+        Are we breaking unity’s physics by moving dynamic objects directly? Wasting operations calculating physics that isn't being used? 
