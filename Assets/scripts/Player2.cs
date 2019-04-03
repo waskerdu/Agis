@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class Player2 : MonoBehaviour
 {
+    public string moveEffect = "";
+    public float moveEffectTimer = 0f;
     public int playerNum = 0; // used to select input source, player color
     public float speed = 10.0f;
     public float jumpPower = 10.0f;
@@ -21,7 +23,7 @@ public class Player2 : MonoBehaviour
     public bool canDash = false;
     Light lig;
     GameObject frame;
-    string fire = "Fire";
+    string dash = "Fire";
     string horizontal = "Horizontal";
     string vertical = "Vertical";
     string jump = "Jump";
@@ -33,121 +35,53 @@ public class Player2 : MonoBehaviour
         rend = frame.GetComponent<SpriteRenderer>();
         lig = frame.GetComponent<Light>();
         lig.color = playerColors[playerNum];
-
-        if (playerNum > 0)
-        {
-            fire += playerNum.ToString();
-            horizontal += playerNum.ToString();
-            vertical += playerNum.ToString();
-            jump += playerNum.ToString();
-        }
+        SetInputs();
     }
 
-    void Update()
+
+     public void SetInputs(bool xbox = true)
     {
-        // begin
-        rb.gravityScale = 4.0f;
-        Vector2 vel = rb.velocity;
-
-        //dashing
-        if (Dash(vel)) return;
-
-        // movement
-        vel.x = Input.GetAxisRaw(horizontal) * speed;
-
-        // jumping
-        if(grounded)
+        string playerNumStr = playerNum.ToString();
+        if(playerNum == 0)
         {
-            currentJumps = maxJumps;
+            dash = "Fire";
+            jump = "Jump";
+            horizontal = "Horizontal";
+            vertical = "Vertical";
         }
-        if(currentJumps > 0)
+        else if (xbox)
         {
-            if(Input.GetButtonDown(jump))
-            {
-                vel.y = jumpPower;
-                currentJumps--;
-            }
-        }
-
-        // air control
-        if(Input.GetButton(jump))
-        {
-            rb.gravityScale = 1.0f;
-        }
-
-        // sprite stuff
-        if(vel.x < 0.0f){spriteFacingLeft = true;}
-        if(vel.x > 0.0f){spriteFacingLeft = false;}
-        rend.flipX = spriteFacingLeft;
-
-        // wrap up
-        rb.velocity = vel;
-        grounded = false;
-    }
-
-    //returns true if dashing, false if not dashing
-    private bool Dash(Vector2 vel)
-    {
-        // if we are in the middle of a dash
-        if (dashClock > 0.0f)
-        {
-            rb.gravityScale = 0.0f;
-            dashClock -= Time.deltaTime;
-            rb.velocity = vel;
-            lig.enabled = true;
-            return true;
+            dash = "joystick " + playerNumStr + " button 4";
+            horizontal = "Horizontal" + playerNumStr;
+            vertical = "Vertical" + playerNumStr;
+            jump = "joystick " + playerNumStr + " button 0";
         }
         else
         {
-            lig.enabled = false;
-            frame.transform.eulerAngles = Vector2.zero;
+            dash = "joystick " + playerNumStr + " button 6"; 
+            horizontal = "Horizontal" + playerNumStr;
+            vertical = "Vertical" + playerNumStr;
+            jump = "joystick " + playerNumStr + " button 1";
         }
+    }
+    void Update()
+    {
 
-        //if we are starting a dash this frame
-        if (Input.GetButtonDown(fire) && canDash)
-        {
-            canDash = false;
-            dashClock = dashTime;
-            rb.gravityScale = 0.0f;
+        //gathering inputs for frame
+        bool jumpDown, jumpPressed, dashDown, dashPressed;
+        jumpPressed = Input.GetKeyDown(jump);
+        jumpDown = Input.GetKey(jump);
+        dashPressed = Input.GetKeyDown(dash);
+        dashDown = Input.GetKey(dash);
 
+        //check if player is ready to dash / is trying to dash
+            //if so, set moveEffect to dash, set moveEffectTimer to dashTime
 
-            vel.x = Input.GetAxisRaw(horizontal);
-            //no x defaults sprite direction
-            if (vel.x == 0.0f)
-            {
-                if (spriteFacingLeft) { vel.x = -1.0f; }
-                else { vel.x = 1.0f; }
-            }
-            else 
-            {
-                vel.x = vel.x / Mathf.Abs(vel.x);//sets vel.x to either 1 or -1 based on input
-            }
+        //check if moveEffectTimer has time on it, if so do moveEffect switch statement
+            //each move effect should set rb.velocity and return out
 
+        //do player movement based on inputs
 
-            vel.y = Input.GetAxisRaw(vertical);
-            //no y defaults to up
-            if (vel.y == 0.0f)
-            {
-                vel.y = 1.0f;
-            }
-            else 
-            {
-                vel.y = vel.y / Mathf.Abs(vel.y);// 1 or -1 y
-            }
-            vel = vel.normalized;
-            vel.x *= dashPower.x;
-            vel.y *= dashPower.y;
-            
-            //transform.position += Vector3.up * 0.1f; //why? this breaks the physics engine
-            
-            rb.velocity = vel;
-            float frameAngle = -Vector2.SignedAngle(Vector2.right, vel);
-            Debug.Log(frameAngle);
-            frame.transform.eulerAngles = Vector3.forward * (frameAngle); //what is this doing??
-            return true;
-        }
-
-        return false;
     }
 
     void OnCollisionStay2D(Collision2D collisionInfo)
