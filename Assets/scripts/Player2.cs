@@ -66,13 +66,15 @@ public class Player2 : MonoBehaviour
     }
     void Update()
     {
+        rb.gravityScale = 4.0f;
+        Vector2 vel = rb.velocity;
 
         //gathering inputs for frame
         bool jumpDown, jumpPressed, dashDown, dashPressed;
-        jumpPressed = Input.GetKeyDown(jump);
-        jumpDown = Input.GetKey(jump);
-        dashPressed = Input.GetKeyDown(dash);
-        dashDown = Input.GetKey(dash);
+        jumpPressed = Input.GetButtonDown("Jump");
+        jumpDown = Input.GetButton("Jump");
+        dashPressed = Input.GetButtonDown("Fire");
+        dashDown = Input.GetButton("Fire");
 
         //check if player is ready to dash / is trying to dash
             //if so, set moveEffect to dash, set moveEffectTimer to dashTime
@@ -81,6 +83,37 @@ public class Player2 : MonoBehaviour
             //each move effect should set rb.velocity and return out
 
         //do player movement based on inputs
+                // x movement
+        vel.x = Input.GetAxisRaw(horizontal) * speed;
+
+               // jumping
+        if(grounded)
+        {
+            currentJumps = maxJumps;
+        }
+        if(currentJumps > 0)
+        {
+            if(jumpPressed)
+            {
+                vel.y = jumpPower;
+                currentJumps--;
+                grounded = false;
+            }
+        }
+
+                // air control
+        if(jumpDown)
+        {
+            rb.gravityScale = 1.0f;
+        }
+
+        // sprite stuff
+        if(vel.x < 0.0f){spriteFacingLeft = true;}
+        if(vel.x > 0.0f){spriteFacingLeft = false;}
+        rend.flipX = spriteFacingLeft;
+
+        // wrap up
+        rb.velocity = vel;
 
     }
 
