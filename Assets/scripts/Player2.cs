@@ -78,9 +78,64 @@ public class Player2 : MonoBehaviour
 
         //check if player is ready to dash / is trying to dash
             //if so, set moveEffect to dash, set moveEffectTimer to dashTime
+        if(dashPressed && canDash)
+        {                    
+            moveEffectTimer = dashTime;
+            moveEffect = "DashStart";      
+            canDash = false;
+        }
+
 
         //check if moveEffectTimer has time on it, if so do moveEffect switch statement
             //each move effect should set rb.velocity and return out
+        if(moveEffectTimer > 0){
+            moveEffectTimer -= Time.deltaTime;
+            switch(moveEffect){
+                
+
+                case "DashContinue":
+                    rb.gravityScale = 0.0f;                                       
+                    lig.enabled = true;
+                    canDash = false;
+                    return;
+                
+                case "DashStart":
+                    rb.gravityScale = 0.0f;
+                    vel.x = Input.GetAxisRaw(horizontal);
+                    if(vel.x == 0.0f)
+                    {
+                        if(spriteFacingLeft){vel.x = -1.0f;}
+                        else{vel.x = 1.0f;}
+                    }
+                    else
+                    {
+                      vel.x = vel.x / Mathf.Abs(vel.x);
+                    }
+                    vel.y = Input.GetAxisRaw(vertical);
+                    if(vel.y == 0.0f)
+                    {
+                        vel.y = 1.0f;
+                    }
+                    else{
+                        vel.y = vel.y / Mathf.Abs(vel.y);
+                    }
+                    vel = vel.normalized * dashSpeed;
+                    rb.velocity = vel;
+
+                    float frameAngle = -Vector2.SignedAngle(Vector2.right, vel);
+                    frame.transform.eulerAngles = Vector3.forward * (frameAngle);
+                    moveEffect = "DashContinue";
+                    return;
+
+
+                default: // if there is no valid effect, skip to player controlled movement 
+                    break;
+            }
+        }
+        else{
+            lig.enabled = false;
+            frame.transform.eulerAngles = Vector2.zero;
+        }
 
         //do player movement based on inputs
                 // x movement
