@@ -16,6 +16,8 @@ public class Player2 : MonoBehaviour
     public float dashClock = 0.0f; //greater than zero during player dash, overrides all movement
 
     public float bounceVal = 1f;
+
+    public float midBounceControlVal = 2f;
     public int maxJumps = 1;
     public int currentJumps = 0;
     bool grounded = false; //set to false every frame, reset to true by oncollsision stay
@@ -95,17 +97,24 @@ public class Player2 : MonoBehaviour
             switch(moveEffect){
                 
                 case "BounceContinue":
-                    //add diminished x control from player to current vel
+                    //add diminished control from player
+                    vel.x += (Input.GetAxisRaw(horizontal) * speed) / midBounceControlVal;
                     //apply vel
-                    break;
+                    rb.velocity = vel;
+                    return;
 
                 case "BounceStart":
-                    var newVel = new Vector2(0f,1f);
                     //set vector to be going up
+                    var newVel = new Vector2(0f,bounceVal);
                     //add x value from vector
+                    newVel.x += vel.x;
                     //add inverted y value from vector
+                    newVel.y += (vel.y * -1);
                     //switch to BounceContinue
-                    break;
+                    moveEffect = "BounceContinue";
+
+                    rb.velocity = newVel;
+                    return;                
 
                 case "DashContinue":
                     rb.gravityScale = 0.0f;                                       
