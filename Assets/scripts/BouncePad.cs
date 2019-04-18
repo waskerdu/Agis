@@ -24,11 +24,12 @@ public class BouncePad : MonoBehaviour
     {
         var other = collision.gameObject;
         Debug.Log("Object Type: " + other.GetType());
-        var rb = other.GetComponent<Rigidbody2D>();
-        if (rb != null)
+        var player = other.GetComponent<Player2>();
+        if (player != null)
         {
-            rb.AddForce(Vector2.up * BounceVal);
-            Debug.Log("we be bouncin");
+            player.moveEffect = "BounceStart";
+            player.moveEffectTimer = .5f;
+            
         }
         
     }

@@ -128,6 +128,8 @@ MonoBehaviour:
   dashSpeed: 30
   dashTime: 0.3
   dashClock: 0
+  bounceVal: 15
+  midBounceControlVal: 20
   maxJumps: 1
   currentJumps: 0
   canDash: 0

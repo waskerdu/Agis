@@ -15,7 +15,7 @@ public class Player2 : MonoBehaviour
     public float dashTime = 0.3f;
     public float dashClock = 0.0f; //greater than zero during player dash, overrides all movement
 
-    public float bounceVal = 1f;
+    public float bounceVal = 12f;
 
     public float midBounceControlVal = 2f;
     public int maxJumps = 1;
