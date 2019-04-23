@@ -7,6 +7,7 @@ public class Player2 : MonoBehaviour
 {
     public string moveEffect = "";
     public float moveEffectTimer = 0f;
+    public Vector2 moveEffectDir;
     public int playerNum = 0; // used to select input source, player color
     public float speed = 10.0f;
     public float jumpPower = 10.0f;
@@ -104,12 +105,12 @@ public class Player2 : MonoBehaviour
                     return;
 
                 case "BounceStart":
-                    //set vector to be going up
-                    var newVel = new Vector2(0f,bounceVal);
+                    //set vector to be going in correct direction 
+                    var newVel = moveEffectDir.normalized;
+                    newVel *= bounceVal * Mathf.Min( Mathf.Max(.8f, (vel.magnitude * .2f)), 7f);
                     //add x value from vector
                     newVel.x += vel.x;
-                    //add inverted y value from vector
-                    newVel.y += (vel.y * -1);
+              
                     //switch to BounceContinue
                     moveEffect = "BounceContinue";
 

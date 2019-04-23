@@ -28,6 +28,7 @@ public class BouncePad : MonoBehaviour
         if (player != null)
         {
             player.moveEffect = "BounceStart";
+            player.moveEffectDir = transform.up;
             player.moveEffectTimer = .5f;
             
         }
